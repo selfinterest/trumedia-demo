@@ -25,17 +25,19 @@ angular.module("TruMediaApp", ["ui.router"])
 
 			//Now's a good time to generate some stats. We could do this on-the-fly later, but it wouldn't be very performative.
 			angular.forEach(this.games, function(game){
-				game.avg = game.H / game.AB;            // The average
+				game.AVG = game.H / game.AB;            // The average
 			});
 
 			//I also want to find some best/max stats: best RBI, best average, best hits
 			//This is a very functional way of doing this task.
-			this.bestStats = _.reduce(["RBI", "HR", "H", "AB", "avg"], function(obj, stat){
+			this.bestStats = _.reduce(["RBI", "HR", "H", "AB", "AVG"], function(obj, stat){
 				obj[stat] = _.max(playerData.games, function(game){
 					return game[stat];
 				});
 				return obj;
 			}, {});
+
+
 		}
 
 		//Make some players based on the data. We use an object to store players to make it easier to later look them up later
@@ -117,6 +119,6 @@ angular.module("TruMediaApp", ["ui.router"])
 		$scope.$on("$stateChangeError", function(err){
 			$scope.log(err);
 		});
-
 	}])
+	.controller("ChartController")
 ;
