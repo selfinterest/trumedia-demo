@@ -5,13 +5,20 @@
     padding: 15px;*/
 }
 
-@media(max-width: 992px){
-    .player-best-stats h4 {
-        font-size: 14px;
-    }
+.season-at-a-glance {
+    position: relative;
+    margin-top: 10px;
+}
 
-    .player-best-stats .date {
-        font-size: 10px;
+@media(max-width: 768px){
+    .season-at-a-glance {
+        margin-top: 0;          /* on small screens, the top border for spacing isn't needed */
+    }
+}
+
+@media(min-width:768px) and (max-width: 992px){
+    .season-at-a-glance .label {
+        font-size: 8px;
     }
 }
 

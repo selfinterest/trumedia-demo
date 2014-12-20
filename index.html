@@ -27,14 +27,46 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-sm-2">
-                            <img class="img-responsive img-rounded player-image hidden-xs" ng-src="{{player.image}}"/>
-                            <div class="list-group player-best-stats">
+                            <div class="row">
+                                <div class="col-sm-12 hidden-xs">
+                                    <img class="img-responsive img-rounded player-image hidden-xs" ng-src="{{player.image}}"/>
+                                </div>
+                            </div>
+                            <div class="row season-at-a-glance">
+                                <div class="col-xs-12">
+                                    <div class="center-block">
+                                        <span class="label label-primary center-block">Season at a glance</span>
+                                    </div>
+                                </div>
+                                <div class="col-xs-12">
+                                    <div class="list-group">
+                                        <div class="list-group-item">
+                                            <h4 class="list-group-item-heading">Overall average</h4>
+                                            <p class="list-group-item-text">{{player.aggregateStats.overallAverage}}</p>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <h4 class="list-group-item-heading">Home runs</h4>
+                                            <p class="list-group-item-text">{{player.aggregateStats.total.HR}}</p>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <h4 class="list-group-item-heading">RBIs</h4>
+                                            <p class="list-group-item-text">{{player.aggregateStats.total.RBI}}</p>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+
+                            </div>
+
+                            <!-- <div class="list-group player-best-stats">
                                 <div ng-repeat="(stat, bestGame) in player.bestStats" class="list-group-item">
                                     <h4 class="list-group-item-heading">Best {{stat}}</h4>
                                     <p class="date">{{bestGame.date | date: 'yyyy-MM-dd'}}</p>
                                 </div>
 
-                            </div>
+                            </div> -->
                         </div>
                         <div class="col-sm-10 col-xs-12">
                             <div class="row" ng-controller="ChartController">

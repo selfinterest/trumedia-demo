@@ -171,7 +171,7 @@ angular.module("TruMediaApp", ["ui.router"])
 	.controller("ChartController", ["$scope", function($scope){
 		var width = 420;
 		var barHeight = 20;
-		var x = d3.time.scale()
+		/*var x = d3.time.scale()
 			.domain([$scope.player.dates])
 			.range([0, width]);
 		var chart = d3.select(".chart")
@@ -179,6 +179,6 @@ angular.module("TruMediaApp", ["ui.router"])
 			.attr("height", barHeight * $scope.player.dates.length);
 
 		var bar = chart.selectAll("g")
-			.data($scope.player.dates)
+			.data($scope.player.dates)*/
 	}])
 ;
