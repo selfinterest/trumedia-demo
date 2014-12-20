@@ -15,19 +15,23 @@ angular.module("TruMediaApp", ["ui.router"])
 			this.games = playerData.games;
 			this.name = playerData.name;
 			this.image = playerData.image;
+
+			this.href = "/"+playerData.id;      //this is the URL that will represent the player in our view
+
 			//Now's a good time to generate some stats. We could do this on-the-fly later, but it wouldn't be very performative.
 			angular.forEach(this.games, function(game){
 				game.avg = game.H / game.AB;            // The average
 			});
 		}
 
-		//Make some players based on the data. We use an object to make it easier to later look up players
+		//Make some players based on the data. We use an object to store players to make it easier to later look them up later
 		var players = {};
 
 		angular.forEach(playerData, function(data){
 			players[data.id] = new Player(data);
 		});
 
+		//No hash prefix
 		$locationProvider.hashPrefix("");
 
 		//When empty state, redirect to first player
@@ -41,27 +45,30 @@ angular.module("TruMediaApp", ["ui.router"])
 				abstract: true,
 				url: '/players',
 				templateUrl: "base.html",
-				controller: "AppController",
+				controller: "BaseController",
 				resolve: {
-					players: [function(){
+					players: [function(){           //resolvers have to be functions.
 						return players;
 					}]
-				},
-				data: {
-					players: players        //all child states will have access to the map of players
 				}
 			})
 			.state("players.playerNotFound", {
 				url: "/player-not-found",
-				template: "<h2>Player not found!</h2>"
+				template: "<h2>Player not found!</h2>",
+				onEnter: ["$rootScope", function($rootScope){
+					$rootScope.$broadcast("playerSelected", null);
+				}]
 			})
 			.state('players.player', {
 				url: "/{playerId}",             //playerId must be integer
 				templateUrl: "player.html",
 				controller: "PlayerController",
-				onEnter: ["selectedPlayer", "$state", function(selectedPlayer, $state){
+				onEnter: ["selectedPlayer", "$state", "$rootScope", function(selectedPlayer, $state, $rootScope){
 					if(!selectedPlayer){        //player not found. Go to the "player not found" view, but do NOT update location.
 						$state.go("players.playerNotFound", {}, {location: false});
+					} else {
+						$rootScope.$broadcast("playerSelected", selectedPlayer);
+
 					}
 				}],
 				resolve: {
@@ -74,12 +81,28 @@ angular.module("TruMediaApp", ["ui.router"])
 		;
 
 	}])
-	.controller("AppController", ["$scope", "players", function($scope, players){
+	.controller("BaseController", ["$scope", "players", function($scope, players){
 		$scope.players = players;       //this gives all child scopes access to the map of players
 	}])
 	.controller("PlayerController", ["$scope", "selectedPlayer", function($scope, selectedPlayer){
 		$scope.player = selectedPlayer;
+	}])
+	.controller("ApplicationController", ["$scope", "$log", function($scope, $log){
+		//A top level controller. Here, all it basically does is adjust the page title based on the selected player
+		var defaultTitle = "TruMedia Project";
 
+		$scope.log = $log;  //make the log available in all descendant scopes
+
+		$scope.$on("playerSelected", function(e, player){
+			$scope.pageTitle = defaultTitle;
+			if(player){
+				$scope.pageTitle += " - " + player.name;
+			}
+		});
+
+		$scope.$on("$stateChangeError", function(err){
+			$scope.log(err);
+		});
 
 	}])
 ;

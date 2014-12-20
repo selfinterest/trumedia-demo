@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html ng-app="TruMediaApp">
+<html ng-app="TruMediaApp" ng-controller="ApplicationController">
 <head>
-    <title>TruMedia Project</title>
+    <title ng-bind="pageTitle"></title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 
 
     <script type="text/ng-template" id="base.html">
         <div class="row">
-            <div class="col-lg-12">
-                <ul class="nav navtabs nav-justified">
-
+            <div class="col-md-12">
+                <ul class="nav nav-tabs">
+                    <li ng-repeat="(playerId, player) in players" ui-sref-active="active">
+                        <a ui-sref="players.player({playerId: playerId})"  href="{{player.href}}">{{player.name}}</a>
+                    </li>
                 </ul>
             </div>
         </div>
