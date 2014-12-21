@@ -67,11 +67,9 @@
                                     <svg class="chart"></svg>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row" ng-controller="TableController">
                                 <div class="col-sm-12">
-                                    <table>
-
-                                    </table>
+                                    <div class="stat-grid" ui-grid="{ data: player.games}"></div>
                                 </div>
                             </div>
                         </div>
