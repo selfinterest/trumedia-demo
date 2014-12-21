@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/styles.css">
 
     <script type="text/ng-template" id="base.html">
+        <!-- base template, including navigation -->
         <div class="row">
             <div class="col-md-12">
                 <ul class="nav nav-pills nav-justified">
@@ -17,12 +18,13 @@
                 </ul>
             </div>
         </div>
+        <!-- the main view -->
         <div class="row main-interface" ui-view>
         </div>
     </script>
 
-
     <script type="text/ng-template" id="player.html">
+        <!-- the player template -->
         <div class="col-md-12">
             <div class="panel panel-default">
                 <div class="panel-body">
@@ -33,23 +35,7 @@
                                     <img class="img-responsive img-rounded player-image hidden-xs" ng-src="{{player.image}}"/>
                                 </div>
                             </div>
-                            <div class="row season-at-a-glance">
-                                <div class="col-xs-12">
-                                    <div class="center-block">
-                                        <span class="label label-primary center-block">Season at a glance</span>
-                                    </div>
-                                </div>
-                                <div class="col-xs-12">
-                                    <div class="list-group">
-                                        <div class="list-group-item">
-                                            <h4 class="list-group-item-heading text-center">{{player.firstGame.date.getFullYear()}}</h4>
-                                        </div>
-                                        <div class="list-group-item" ng-repeat="stat in ['AVG', 'HR', 'RBI']">
-                                            <h4 class="list-group-item-heading text-center">{{stat}}</h4>
-                                            <p class="list-group-item-text text-center">{{player.aggregateStats.total[stat]}}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="row season-at-a-glance" ng-include="'season-at-a-glance.html'">
                             </div>
                         </div>
                         <div class="col-sm-10 col-xs-12">
@@ -70,6 +56,30 @@
             </div>
         </div>
     </script>
+
+
+    <script type="text/ng-template" id="season-at-a-glance.html">
+        <!-- sub-view: Season at a glance -->
+        <div class="col-xs-12">
+            <div class="center-block">
+                <span class="label label-primary center-block">Season at a glance</span>
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <div class="list-group">
+                <div class="list-group-item">
+                    <h4 class="list-group-item-heading text-center">Year</h4>
+                    <p class="list-group-item-text text-center">{{player.firstGame.date.getFullYear()}}</p>
+                </div>
+                <div class="list-group-item" ng-repeat="stat in ['AVG', 'HR', 'RBI']">
+                    <h4 class="list-group-item-heading text-center">{{stat}}</h4>
+                    <p class="list-group-item-text text-center">{{player.aggregateStats.total[stat]}}</p>
+                </div>
+            </div>
+        </div>
+    </script>
+
+
 </head>
 <body>
     <div class="container" ui-view>
