@@ -76,7 +76,7 @@ function PlayerAggregateStats(games){
 	this.total.AB = sumUp(games, "AB");
 
 	//It makes no sense to total up all the averages, but we can at least calculate the overall average
-	this.overallAverage = Math.round(this.total.H / this.total.AB * 1000)/1000;
+	this.total.AVG = Math.round(this.total.H / this.total.AB * 1000)/1000;
 }
 
 angular.module("TruMediaApp", ["ui.router", "ui.grid"])

@@ -44,19 +44,10 @@
                                         <div class="list-group-item">
                                             <h4 class="list-group-item-heading text-center">{{player.firstGame.date.getFullYear()}}</h4>
                                         </div>
-                                        <div class="list-group-item">
-                                            <h4 class="list-group-item-heading text-center">AVG</h4>
-                                            <p class="list-group-item-text text-center">{{player.aggregateStats.overallAverage}}</p>
+                                        <div class="list-group-item" ng-repeat="stat in ['AVG', 'HR', 'RBI']">
+                                            <h4 class="list-group-item-heading text-center">{{stat}}</h4>
+                                            <p class="list-group-item-text text-center">{{player.aggregateStats.total[stat]}}</p>
                                         </div>
-                                        <div class="list-group-item">
-                                            <h4 class="list-group-item-heading text-center">HR</h4>
-                                            <p class="list-group-item-text text-center">{{player.aggregateStats.total.HR}}</p>
-                                        </div>
-                                        <div class="list-group-item">
-                                            <h4 class="list-group-item-heading text-center">RBI</h4>
-                                            <p class="list-group-item-text text-center">{{player.aggregateStats.total.RBI}}</p>
-                                        </div>
-
                                     </div>
                                 </div>
                             </div>
