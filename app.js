@@ -115,9 +115,6 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 						return players;
 					}]
 				}
-				//templateUrl: "base.html",
-				//controller: "BaseController",
-
 			})
 			.state("players.playerNotFound", {
 				url: "/player-not-found",
@@ -134,6 +131,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 				deepStateRedirect: true,
 				onEnter: ["selectedPlayer", "$state", "$rootScope", function(selectedPlayer, $state, $rootScope){
 					$rootScope.player = selectedPlayer;
+
 					if(!selectedPlayer){        //player not found. Go to the "player not found" view, but do NOT update location.
 						$state.go("players.playerNotFound", {}, {location: false});
 					} else {
@@ -163,7 +161,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
 		$scope.log = $log;  //make the log available in all descendant scopes
 
-		$scope.$on("playerSelected", function(e, player){
+		$scope.$watch("player", function(player){
 			$scope.pageTitle = defaultTitle;
 			if(player){
 				$scope.pageTitle += " - " + player.name;
@@ -175,18 +173,74 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 		});
 	}])
 	.controller("ChartController", ["$scope", function($scope){
-		var width = 420;
-		var barHeight = 20;
-		console.log($scope.player);
-		/*var x = d3.time.scale()
-			.domain([$scope.player.dates])
-			.range([0, width]);
-		var chart = d3.select(".chart")
-			.attr("width", width)
-			.attr("height", barHeight * $scope.player.dates.length);
+		//Add the SVG container
+		var width = 900,
+			height = 400,
+			padding = 100;
 
-		var bar = chart.selectAll("g")
-			.data($scope.player.dates)*/
+		var chart = d3.select("#chart").
+			append("svg:svg")
+			.attr("width", width)
+			.attr("height", height);
+
+		var yScale = d3.scale.linear()
+			.domain([0, 1])    // values between 0 and 1
+			.range([height - padding, padding]);   // map these to the chart height, less padding.
+
+		// define the y axis
+		var yAxis = d3.svg.axis()
+			.orient("left")
+			.scale(yScale);
+
+		var xScale, xAxis;
+
+
+		//REMEMBER: y axis range has the bigger number first because the y value of zero is at the top of chart and increases as you go down.
+
+		//We need to recalculate certain things each time the selected player changes. Use a watch for that.
+		var scale;
+
+
+		$scope.$watch("player", function(player){
+			var dates = _.pluck(player.games, "date");
+			xScale = d3.time.scale.utc()
+				.domain([dates[0], dates[dates.length - 1]])    // values between for month of january
+				.range([padding, width - padding * 2])
+				//.nice()
+			;
+
+			xAxis = d3.svg.axis()
+				.orient("bottom")
+				.ticks(d3.time.months.utc, 1)
+				.scale(xScale)
+
+			// draw y axis with labels and move in from the size by the amount of padding
+			chart.append("g")
+				.attr("transform", "translate("+padding+",0)")
+				.call(yAxis);
+
+			chart.append("g")
+				.attr("class", "xaxis")   // give it a class so it can be used to select only xaxis labels  below
+				.attr("transform", "translate(0," + (height - padding) + ")")
+				.call(xAxis);
+
+
+			/*chart.selectAll(".xaxis text")
+				.attr("transform", function(d){
+					return "translate(, 20)rotate(-45)";
+				})
+*/
+			// now rotate text on x axis
+			// solution based on idea here: https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
+			// first move the text left so no longer centered on the tick
+			// then rotate up to get 45 degrees.
+			chart.selectAll(".xaxis text")  // select all the text elements for the xaxis
+				.attr("transform", function(d) {
+					return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-45)";
+				});
+
+		});
+
 	}])
 	.controller("TableController", ["$scope", function($scope){
 
