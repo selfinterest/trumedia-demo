@@ -133,6 +133,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 				sticky: true,
 				deepStateRedirect: true,
 				onEnter: ["selectedPlayer", "$state", "$rootScope", function(selectedPlayer, $state, $rootScope){
+					$rootScope.player = selectedPlayer;
 					if(!selectedPlayer){        //player not found. Go to the "player not found" view, but do NOT update location.
 						$state.go("players.playerNotFound", {}, {location: false});
 					} else {
@@ -141,7 +142,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 					}
 				}],
 				resolve: {
-					selectedPlayer: ["$stateParams", function($stateParams){
+					selectedPlayer: ["$stateParams",  function($stateParams){
 						return players[$stateParams.playerId] || null;
 					}]
 				}

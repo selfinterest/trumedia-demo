@@ -19,7 +19,36 @@
             </div>
         </div>
         <!-- the main view -->
-        <div class="row main-interface" ui-view>
+        <div class="row main-interface">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-2 col-xs-12">
+                                <div class="row">
+                                    <div class="col-sm-12 hidden-xs">
+                                        <img class="img-responsive img-rounded player-image hidden-xs" ng-src="{{player.image}}"/>
+                                    </div>
+                                </div>
+                                <div class="row season-at-a-glance" ng-include="'season-at-a-glance.html'">
+                                </div>
+                            </div>
+                            <div class="col-sm-10 col-xs-12">
+                                <div class="row" ng-controller="ChartController">
+                                    <div class="col-sm-12">
+                                        <svg class="chart"></svg>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="stat-grid" ui-grid="{ data: player.games}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </script>
 
@@ -29,30 +58,12 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                     <div class="row">
-                        <!-- player view, left column -->
-                        <div class="col-sm-2">
-                            <div class="row">
-                                <div class="col-sm-12 hidden-xs">
-                                    <img class="img-responsive img-rounded player-image hidden-xs" ng-src="{{player.image}}"/>
-                                </div>
-                            </div>
-                            <div class="row season-at-a-glance" ng-include="'season-at-a-glance.html'">
-                            </div>
-                        </div>
                         <!-- player view, right column -->
                         <div class="col-sm-10 col-xs-12">
                             <!-- top -->
-                            <div class="row" ui-view="chart">
-                                <div class="col-sm-12">
-                                    <svg class="chart"></svg>
-                                </div>
-                            </div>
+
                             <!-- bottom -->
-                            <div class="row" ui-view="table">
-                                <div class="col-sm-12">
-                                    <div class="stat-grid" ui-grid="{ data: player.games}"></div>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
