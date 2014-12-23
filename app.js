@@ -18,12 +18,46 @@ function Player(playerData){
 
 	this.href = "/"+this.id;      //this is the URL that will represent the player in our view
 
+	//Remove games for each AB = 0. We don't particularly care about those.
+	this.games = _.filter(this.games, function(game){
+		return game.AB > 0;
+	});
+
 	//Now's a good time to generate some game stats and convert the date to a JavaScript date objects. We could do this on-the-fly later, but it wouldn't be very performative.
-	_.each(this.games, function(game){
+	var lastAverage;
+	_.each(this.games, function(game, index, games){
 		game.AVG = Math.round(game.H / game.AB * 1000)/1000;            // The average
+		/*if(!isNaN(game.AVG)){
+			lastAverage = game.AVG;
+		} else {
+			game.AVG = lastAverage;
+		}*/
 		game.friendlyDate = game.date;          // Keep a copy of the original date string.
 		game.date = parseGameDate(game.date);   //Turn string dates into JavaScript dates
 	});
+
+
+
+	//We need to do something about occasions where AB = 0, to avoid divide by zero problems.
+	//Basically, we just want batting average on these occasions to be the same as the surrounding occasions. Not going to bat shouldn't affect average.
+
+	/*var lastAverage;
+	_.each(this.games, function(game, index, games){
+		if(isNaN(game.AVG)){
+			if(lastAverage){
+				game.AVG = lastAverage;
+			} else {    //peek ahead
+				for(var x = index; x < games.length; x++){
+					if(!isNaN(games[x].AVG)){
+						game.AVG = games[x].AVG;
+						break;
+					}
+				}
+			}
+		} else {
+			lastAverage = game.AVG;
+		}
+	});*/
 
 
 	/**
@@ -185,12 +219,22 @@ function PlayerAggregateStats(games){
 	var movingAverageCalculator = generateMovingAverageFunction(9);
 	var cumulativeAverageCalculator = generateCumulativeMovingAverageFunction();
 
+	var wait = false;
 
 	_.each(games, function(game, index){
+
 		if(!isNaN(game.AVG)){
 			game.movingAverage = movingAverageCalculator(game.AVG);
 			game.cumulativeAverage = cumulativeAverageCalculator(game.AVG);
 		} else {
+			//game.movingAverage = game.AVG;
+			//game.cumulativeAverage = game.AVG;
+			/*if(index > 0) {
+				game.cumulativeAverage = cumulativeAverageCalculator(games[index - 1].cumulativeAverage)
+
+			} else {    //peek ahead
+				wait = true;
+			}*/
 			/*if(games[index - 1]){
 				game.movingAverage = games[index-1].movingAverage;
 			}*/
@@ -198,6 +242,7 @@ function PlayerAggregateStats(games){
 		}
 
 	});
+
 
 	var statsIncludingAverages = stats.concat(["AVG", "cumulativeAverage", "movingAverage"]);  //Include the average
 
@@ -410,6 +455,14 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 					.attr("height", height)
 				;
 
+				xScale = d3.time.scale.utc()
+					.range([paddingY, width - paddingY]);
+
+				yScale = d3.scale.linear()
+					.range([height - paddingX, paddingX])
+					.nice();
+
+
 				//Find the maximum cumulative average between all three players
 				var aggregateStatsForAllPlayers = _.pluck(scope.players, "aggregateStats");
 				var allMaximums = _.pluck(aggregateStatsForAllPlayers, "maximum");
@@ -421,9 +474,10 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
 				//THis gets me a decent domain for the Y axis
 
+				yScale.domain([minimumCumulativeAverage, maximumCulumativeAverage]);
 
 				//Set up Y Axis
-				yScale = d3.scale.linear()
+				/*yScale = d3.scale.linear()
 						.domain([minimumCumulativeAverage, maximumCulumativeAverage])
 						.range([height - paddingX, paddingX])
 						.nice()
@@ -440,48 +494,64 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 					.attr("class", "axis")
 					.attr("transform", "translate("+paddingX+",0)")      //this positions the Y axis
 					.call(yAxis);
-
+				*/
 
 				//x.domain(d3.extent(data, function(d) { return d.date; }));
 				//y.domain(d3.extent(data, function(d) { return d.close; }));
 				//We need a line
 
-				var prevAverage = 0;
+				//var prevAverage = 0;
 				var line = d3.svg.line()
 					.x(function(d) { return xScale(d.date); })
 					.y(
 					function(d) {
-						if(d.cumulativeAverage){
+						/*if(d.cumulativeAverage){
 							prevAverage = d.cumulativeAverage;
 							return yScale(d.cumulativeAverage);
 						} else {
 							return yScale(prevAverage);
-						}
-						//return yScale(d.cumulativeAverage);
+						}*/
+						return yScale(d.cumulativeAverage);
 					})
 					.interpolate("basis");
 
 
 				scope.$watch("player", function(player){
+					//prevAverage = 0;
 					if(player){
-						//Set up X axis
 
+						xScale.domain(d3.extent(player.games, function(d) { return d.date; }));
+						//yScale.domain(d3.extent(player.games, function(d) { return d.cumulativeAverage}));
+
+
+						console.log(player);
+
+						//Set up X axis
 
 						//Get the dates for the x axis charting
 						dates = _.pluck(player.games, "dates");
 
 
 
-						xScale = d3.time.scale.utc()
+						/*xScale = d3.time.scale.utc()
 							.domain([player.firstGame.date, player.lastGame.date])
 							.range([paddingY, width - paddingY])
-						;
+						;*/
 
 						xAxis = d3.svg.axis()
 							.orient("bottom")
 							.scale(xScale)
 						;
 
+						yAxis = d3.svg.axis()
+							.orient("left")
+							.scale(yScale)
+						;
+
+
+						//Remove old X axis
+						chart.selectAll("xaxis").remove();
+						//Draw X Axis and labels
 						chart.append("g")
 							.attr("class", "axis xaxis")   // give it a class so it can be used to select only xaxis labels  below
 							.attr("transform", "translate(0," + (height - paddingY) + ")")          //this positions the xaxis
@@ -493,6 +563,13 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 							.attr("transform", "rotate(90)")
 							.style("text-anchor", "start")
 						;
+
+						//Draw Y axis
+						chart.append("g")
+							.attr("class", "axis")
+							.attr("transform", "translate("+paddingX+",0)")      //this positions the Y axis
+							.call(yAxis);
+
 
 						//And get the data we're charting
 
