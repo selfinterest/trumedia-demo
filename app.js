@@ -55,6 +55,10 @@ function Player(playerData){
  */
 function PlayerAggregateStats(games){
 
+	var stats = ["H", "HR", "RBI", "AB"];
+
+	//Really important helper functions.
+
 	/**
 	 * Sums up a particular stat from all the games
 	 * @param {[Object]} games The array of games
@@ -67,16 +71,140 @@ function PlayerAggregateStats(games){
 		}, 0);
 	}
 
-	this.total = {};
+	/**
+	 * Returns a function that can calculate a moving average for a data series
+	 * @param period
+	 * @returns {Function}
+	 */
+	function generateMovingAverageFunction(period) {
+		var nums = [];
+		return function(num) {
+			//debugger;
+			nums.push(num);
+			if (nums.length > period)
+				nums.splice(0,1);  // remove the first element of the array
+			var sum = 0;
+			for (var i in nums)
+				sum += nums[i];
+			var n = period;
+			if (nums.length < period)
+				n = nums.length;
+			return(sum/n);
+		}
+	}
 
-	this.total.games = games.length;
-	this.total.H = sumUp(games, "H");
-	this.total.HR = sumUp(games, "HR");
-	this.total.RBI = sumUp(games, "RBI");
-	this.total.AB = sumUp(games, "AB");
+	function generateCumulativeMovingAverageFunction(){
+		var n = 0;
+		var cumulativeAverage = 0;
+
+		return function(newData){
+			var x = cumulativeAverage * n;
+			x = x + newData;
+			x = x / (n + 1);
+			cumulativeAverage = x;
+			n++;
+			return cumulativeAverage;
+		}
+	}
+
+	/**
+	 * Applies a function to each of the stats.
+	 * @param {Function} someFunction Function to call
+	 * @param {Array} someArguments The arguments to use when the function is called
+	 * @param {Array} someStats
+	 * @returns {object} Keys are stat names, values are results of applying the function
+	 */
+	function applyToEachStat(someFunction, someArguments, someStats){
+		if(!someStats) someStats = stats;
+		return _.reduce(someStats, function(resultObject, stat){
+			resultObject[stat] = someFunction.apply(null, someArguments.concat(stat));          //apply the passed arguments, plus the stat
+			return resultObject;
+		}, {});
+
+	}
+	/**
+	 * Applies a function to each stat in a set
+	 * @param {Function} someFunction The function to apply
+	 * @param {Array} games The array of games
+	 * @param {Array} someStats an array of stats. Optional.
+	 * @returns {Object} An object, keys will be stats, values will be the value of the stat across all games, as calculated by the function
+	 */
+	function applyToEachStatForAllGames(someFunction, games, someStats){
+		if(!someStats) someStats = stats;                       //if not defined, use the default set of stats
+
+		var resultObject = {};
+
+		_.each(someStats, function(stat){
+			resultObject[stat] = someFunction(games, stat);
+		});
+
+		return resultObject;
+	}
+
+	this.total = {};
+	this.total = applyToEachStatForAllGames(sumUp, games);
 
 	//It makes no sense to total up all the averages, but we can at least calculate the overall average
 	this.total.AVG = Math.round(this.total.H / this.total.AB * 1000)/1000;
+
+	this.total.games = games.length;
+
+	//We can also figure out the maximum and minimum for each stat
+	/*var statsIncludingAverage = stats.concat("AVG");  //Include the average
+
+	this.maximum = applyToEachStatForAllGames(_.max, games, statsIncludingAverage);        //include average here, because maximum average might be interesting to know.
+	this.minimum = applyToEachStatForAllGames(_.min, games, statsIncludingAverage);*/
+
+	//this.movingAverage = {};      //the moving average for each stat, indexed by game
+	/*this.movingAverage = _.reduce(games, function(obj, game, index){
+		if(!isNaN(game.AVG)){
+			if(index == 0){
+				obj[index] = game.AVG;
+				//debugger;
+			} else {
+				//Find the mean of the previous games
+				var sum = 0, mean;
+				for(var x = 0; x < index; x++){
+					if(obj[x]){
+						sum += obj[x];
+					}
+				}
+
+				sum += game.AVG;
+				mean = sum / index;
+				obj[index] = mean;
+
+				//obj[index] =
+			}
+		}
+
+		return obj;
+	}, {});*/
+
+
+	var movingAverageCalculator = generateMovingAverageFunction(9);
+	var cumulativeAverageCalculator = generateCumulativeMovingAverageFunction();
+
+
+	_.each(games, function(game, index){
+		if(!isNaN(game.AVG)){
+			game.movingAverage = movingAverageCalculator(game.AVG);
+			game.cumulativeAverage = cumulativeAverageCalculator(game.AVG);
+		} else {
+			/*if(games[index - 1]){
+				game.movingAverage = games[index-1].movingAverage;
+			}*/
+			//game.movingAverage = games[index - 1].movingAverage || 0;
+		}
+
+	});
+
+	var statsIncludingAverages = stats.concat(["AVG", "cumulativeAverage", "movingAverage"]);  //Include the average
+
+	this.maximum = applyToEachStatForAllGames(_.max, games, statsIncludingAverages);        //include average here, because maximum average might be interesting to know.
+	this.minimum = applyToEachStatForAllGames(_.min, games, statsIncludingAverages);
+
+	console.log(this);
 }
 
 angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
@@ -173,8 +301,11 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 		});
 	}])
 	.controller("ChartController", ["$scope", function($scope){
+		//Find out some dimensions
+		//var container = angular.element("#chart");
+
 		//Add the SVG container
-		var width = 900,
+		/*var width = container.width(),
 			height = 400,
 			padding = 100;
 
@@ -234,15 +365,170 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 			// solution based on idea here: https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
 			// first move the text left so no longer centered on the tick
 			// then rotate up to get 45 degrees.
-			chart.selectAll(".xaxis text")  // select all the text elements for the xaxis
-				.attr("transform", function(d) {
-					return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-45)";
-				});
+			//chart.selectAll(".xaxis text")  // select all the text elements for the xaxis
+			//	.attr("transform", function(d) {
+			//		return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-45)";
+			//	});
 
-		});
+		//});
 
 	}])
 	.controller("TableController", ["$scope", function($scope){
 
+	}])
+	.directive("chart", ["$window", function($window){
+		return {
+			restrict: "A",
+			templateNamespace: "svg",
+			template: "<svg id='chart'></svg>",
+			link: function(scope, element, attr){
+
+				var width = parseInt($window.getComputedStyle(element[0]).width, 10);
+				var height = 300;       //height is fixed, but width is set to the container width.
+				var chart = d3.select("#chart"), yScale, yAxis, xScale, xAxis;
+				var dates, averages, maxAverage, minAverage;
+
+				var paddingY = 50;
+				var paddingX = 50;
+				/*chart
+					.attr("width", width)
+					.attr("height", height)
+				;
+
+				//Set up the Y Axis of the chart
+				var yScale = d3.scale.linear()
+					.domain([0, 1])    // values between 0 and 1
+					.range([0, height])
+				;
+
+
+
+				var xScale, xAxis, dates;*/
+
+				chart
+					.attr("width", width)
+					.attr("height", height)
+				;
+
+				//Find the maximum cumulative average between all three players
+				var aggregateStatsForAllPlayers = _.pluck(scope.players, "aggregateStats");
+				var allMaximums = _.pluck(aggregateStatsForAllPlayers, "maximum");
+				var allMinimums = _.pluck(aggregateStatsForAllPlayers, "minimum");
+				var allMaximumCumulativeAverages = _.pluck(_.pluck(allMaximums, "cumulativeAverage"), "cumulativeAverage");
+				var allMinimumCumulativeAverages = _.pluck(_.pluck(allMinimums, "cumulativeAverage"), "cumulativeAverage");
+				var maximumCulumativeAverage = _.max(allMaximumCumulativeAverages);
+				var minimumCumulativeAverage = _.min(allMinimumCumulativeAverages);
+
+				//THis gets me a decent domain for the Y axis
+
+
+				//Set up Y Axis
+				yScale = d3.scale.linear()
+						.domain([minimumCumulativeAverage, maximumCulumativeAverage])
+						.range([height - paddingX, paddingX])
+						.nice()
+					;
+
+				yAxis = d3.svg.axis()
+						.orient("left")
+						.tickFormat(d3.format('.03f'))           //we want 3 significant digits
+						.scale(yScale)
+					;
+
+				//Draw Y axis
+				chart.append("g")
+					.attr("class", "axis")
+					.attr("transform", "translate("+paddingX+",0)")      //this positions the Y axis
+					.call(yAxis);
+
+
+				//x.domain(d3.extent(data, function(d) { return d.date; }));
+				//y.domain(d3.extent(data, function(d) { return d.close; }));
+				//We need a line
+
+				var prevAverage = 0;
+				var line = d3.svg.line()
+					.x(function(d) { return xScale(d.date); })
+					.y(
+					function(d) {
+						if(d.cumulativeAverage){
+							prevAverage = d.cumulativeAverage;
+							return yScale(d.cumulativeAverage);
+						} else {
+							return yScale(prevAverage);
+						}
+						//return yScale(d.cumulativeAverage);
+					})
+					.interpolate("basis");
+
+
+				scope.$watch("player", function(player){
+					if(player){
+						//Set up X axis
+
+
+						//Get the dates for the x axis charting
+						dates = _.pluck(player.games, "dates");
+
+
+
+						xScale = d3.time.scale.utc()
+							.domain([player.firstGame.date, player.lastGame.date])
+							.range([paddingY, width - paddingY])
+						;
+
+						xAxis = d3.svg.axis()
+							.orient("bottom")
+							.scale(xScale)
+						;
+
+						chart.append("g")
+							.attr("class", "axis xaxis")   // give it a class so it can be used to select only xaxis labels  below
+							.attr("transform", "translate(0," + (height - paddingY) + ")")          //this positions the xaxis
+							.call(xAxis)
+							.selectAll("text")
+							.attr("y", 0)
+							.attr("x", 9)
+							.attr("dy", ".35em")
+							.attr("transform", "rotate(90)")
+							.style("text-anchor", "start")
+						;
+
+						//And get the data we're charting
+
+						//console.log(player.games);
+						//var data = _.pluck(player.games, "cumulativeAverage");
+
+						//var data =
+						chart.selectAll("path")
+							.datum(player.games)
+							.attr("class", "line")
+							.attr("d", line)
+						;
+							//.enter()
+						//console.log(data);
+						//chart.selectAll("g")
+						//	.data(data)
+						//chart.data(data)
+						//	.enter()
+
+
+					}
+
+
+
+
+
+					//Draw X and Y Axis
+					// draw y axis with labels and move in from the size by the amount of padding
+
+				});
+
+
+
+
+
+			}
+		}
 	}])
 ;
