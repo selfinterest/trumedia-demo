@@ -84,9 +84,13 @@
             <div class="list-group">
                 <div class="list-group-item">
                     <h4 class="list-group-item-heading text-center">Year</h4>
-                    <p class="list-group-item-text text-center">{{player.firstGame.date.getFullYear()}}</p>
+                    <p class="list-group-item-text text-center">{{player.gamesAtBat[0].date.getFullYear()}}</p>
                 </div>
-                <div class="list-group-item" ng-repeat="stat in ['AVG', 'HR', 'RBI']">
+                <div class="list-group-item">
+                    <h4 class="list-group-item-heading text-center">AVG</h4>
+                    <p class="list-group-item-text text-center">{{player.aggregateStats.AVG}}</p>
+                </div>
+                <div class="list-group-item" ng-repeat="stat in ['AB', 'H', 'HR', 'RBI']">
                     <h4 class="list-group-item-heading text-center">{{stat}}</h4>
                     <p class="list-group-item-text text-center">{{player.aggregateStats.total[stat]}}</p>
                 </div>
@@ -106,6 +110,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.11/angular-ui-router.min.js"></script>
     <script src="lib/ct-ui-router-extras.min.js"></script>
     <script src="lib/ui-grid/ui-grid.min.js"></script>
+    <script src="js/Base.js"></script>
+    <script src="js/Player.js"></script>
+    <script src="js/Game.js"></script>
+    <script src="js/PlayerAggregateStats.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
