@@ -136,6 +136,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             templateNamespace: "svg",
             template: "<svg id='chart'></svg>",
             link: function(scope, element, attr){
+                console.log("Directive loaded");
                 var width = parseInt($window.getComputedStyle(element[0]).width, 10);
                 var height = 300, barHeight = 20;           //fixed height. Might need to fix this.
                 var paddingX = 50, paddingY = 50;
@@ -195,16 +196,44 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                 ;
 
 
+                //scope.data = [];
+
+
+
+
                 scope.$watchGroup(['player', 'stat'], function(newValues){
                     console.log("Drawing graph");
 
                     player = newValues[0];
                     stat = newValues[1];
 
-                    //Extract data into an array of objects (date, value)
-                    data = _.pairs(player.aggregateStats.months);
+//                    if(!scope.data) {
+//                        scope.data = [];
+//                        for(var x = 3; x < 10; x++){
+//                            scope.data.push({
+//                                date: x,
+//                                value: 0
+//                            });
+//                        }
+//                    }
+//
+//                    //Scope data is an array that is full of objects. Those objects retain their identity no matter how many times a graph is generated.
+//
+//                    _.each(scope.data, function(dataObject){
+//                       //Update the values
+//                       if(player.aggregateStats.months[dataObject.date - 1]){      //-1 because JS dates are dumb
+//                           dataObject.value = player.aggregateStats.months[dataObject.date - 1][stat];
+//                       } else {
+//                           dataObject.value = 0;
+//                       }
+//                    });
+//
+//                    console.log(scope.data);
 
-                    data = _.map(data, function(d){
+                    //Extract data into an array of objects (date, value)
+                    var pairs = _.pairs(player.aggregateStats.months);
+
+                    data = _.map(pairs, function(d){
                        //Number cast is so that JavaScript adds the numbers, rather than concacting them.
                        var adjustedMonth = Number(d[0]) + 1;        //JavaScript uses base 0 dates. D3 doesn't, or doesn't need to.
 
@@ -214,22 +243,22 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                        }
                     });
 
+                    scope.data = data;
 
-
-                    console.log(data);
-
-                    xScale.domain(data.map(function(d){
+                    xScale.domain(scope.data.map(function(d){
                         return d.date;
                     }));
 
+                    //xScale.domain([3,4,5,6,7,8,9]);
 
 
-                    yScale.domain([0, d3.max(data, function(d){
+
+                    yScale.domain([0, d3.max(scope.data, function(d){
                         return d.value;
                     })]);
 
 
-                    var maxY = _.max(data, function(d){
+                    var maxY = _.max(scope.data, function(d){
                        return d.value;
                     }).value;
 
@@ -263,15 +292,34 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     ;
 
 
-                    //Graph the data
-                    chart.selectAll("bar")
-                        .data(data)
-                        .enter().append("rect")
-                        .style("fill", "steelblue")
+                    bar = chart.selectAll(".bar")
+                        .data(scope.data, function(d){
+                            return String(d.date)
+                        })
+                    ;
+
+                    bar     ///this covers bars that already exist
+                        .transition()
+                        .attr("height", function(d){
+                            return height - paddingY - yScale(d.value);
+                        })
+                        .attr("y", function(d){
+                            return yScale(d.value);
+                        })
                         .attr("x", function(d){
                             return xScale(d.date)
                         })
+                    ;
+
+                    bar.enter().append("rect")
+                        .style("fill", "steelblue")
                         .attr("width", xScale.rangeBand())
+                        .attr("class", "bar")
+                        .transition()
+                        .attr("x", function(d){
+                            return xScale(d.date)
+                        })
+
                         .attr("y", function(d){
                             return yScale(d.value);
                         })
@@ -279,22 +327,14 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                             return height - paddingY - yScale(d.value);
                         })
                     ;
-                    /*bar = chart.selectAll("g")
-                        .data(data)
-                        .enter().append("g")
-                        .attr("transform", function(d, i){
-                            return "translate(0," + i * barHeight + ") ";
-                        })
-                    ;
 
-                    //Add rectangle to each bar
-                    bar.append("rect")
-                        .attr("width", function(d){
-                            console.log(arguments);
-                            return xScale(d[1][stat]);
-                        })
-                        .attr("height", barHeight - 1)
-                    ;*/
+
+
+                    bar.exit()
+                        .attr("height", 0)
+                        .remove();
+
+
 
                 });
 
