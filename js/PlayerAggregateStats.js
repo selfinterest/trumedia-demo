@@ -17,7 +17,7 @@ function PlayerAggregateStats(player){
     this.total = this.applyToEachStatForAllGames(player.gamesAtBat, this.sumUp);
 
     this.AVG = Math.round(this.total.H / this.total.AB * 1000)/1000;    //Overall average
-
+    this.AVG = this.AVG.toFixed(3);
 
     // We've already divided games into months. Take the games for each month, and generate a set of stats for _each month_: AVG, H, HR, etc.
     this.months = {};
@@ -27,6 +27,7 @@ function PlayerAggregateStats(player){
         .reduce(_.bind(function(resultObject, month){
             resultObject[month] = this.applyToEachStatForAllGames(player.months[month], this.sumUp);
             resultObject[month].AVG = Math.round(resultObject[month].H / resultObject[month].AB * 1000)/1000;
+            resultObject[month].AVG = resultObject[month].AVG.toFixed(3);
             return resultObject;
         }, this), {})
         .value();

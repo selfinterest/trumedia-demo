@@ -30,13 +30,14 @@ function Player(playerData){
         //For games at bat, calculate average
         _.each(this.gamesAtBat, function(game){
             game.AVG = Math.round(game.H / game.AB * 1000)/1000;
+            game.AVG = game.AVG.toFixed(3);
+
         });
 
         //Group games at bat into months
         this.months = _.groupBy(this.gamesAtBat, function(game){
             return game.date.getMonth();
         });
-
 
 
 

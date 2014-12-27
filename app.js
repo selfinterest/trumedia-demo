@@ -129,6 +129,17 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 	}])
 	.controller("TableController", ["$scope", function($scope){
 
+        $scope.gridOptions = {
+            data: $scope.player.gamesAtBat,
+            enableSorting: true,
+            columnDefs: [
+                {field: "date", width: "*", cellTemplate: '<div class="ui-grid-cell-contents"><span>{{COL_FIELD | date: "yyyy-MMM-d"}}</span></div>'},
+                {field: "AVG", width: "6%"}
+            ]
+                .concat(_.map($scope.player.stats, function(stat){
+                    return {field: stat, width: "6%"};
+                }))
+        }
 	}])
     .directive("chart", ["$window", "$stateParams", function($window, $stateParams){
         return {
@@ -280,10 +291,10 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
                     chart.selectAll("g.x.axis").call(xAxis)
                     .selectAll("text")
-                        .style("text-anchor", "end")
-                        .attr("dx", "-.8em")
-                        .attr("dy", "-.55em")
-                        .attr("transform", "rotate(-90)")
+                       // .style("text-anchor", "end")
+                        //.attr("dx", "-.8em")
+                        //.attr("dy", "-.55em")
+                        //.attr("transform", "rotate(-90)")
                     ;
 
                     //Y axis
@@ -341,192 +352,4 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             }
         }
     }])
-	.directive("chart2", ["$window", "$stateParams", function($window, $stateParams){
-		return {
-			restrict: "A",
-			templateNamespace: "svg",
-			template: "<svg id='chart'></svg>",
-			link: function(scope, element, attr){
-
-				var width = parseInt($window.getComputedStyle(element[0]).width, 10);
-				var height = 300;       //height is fixed, but width is set to the container width.
-				var chart = d3.select("#chart"), yScale, yAxis, xScale, xAxis;
-				var dates, averages, maxAverage, minAverage;
-
-				var paddingY = 50;
-				var paddingX = 50;
-				/*chart
-					.attr("width", width)
-					.attr("height", height)
-				;
-
-				//Set up the Y Axis of the chart
-				var yScale = d3.scale.linear()
-					.domain([0, 1])    // values between 0 and 1
-					.range([0, height])
-				;
-
-
-
-				var xScale, xAxis, dates;*/
-
-				chart
-					.attr("width", width)
-					.attr("height", height)
-				;
-
-				xScale = d3.time.scale.utc()
-					.range([paddingY, width - paddingY]);
-
-				yScale = d3.scale.linear()
-					.range([height - paddingX, paddingX])
-					.nice();
-
-
-				//Find the maximum cumulative average between all three players
-				var aggregateStatsForAllPlayers = _.pluck(scope.players, "aggregateStats");
-				var allMaximums = _.pluck(aggregateStatsForAllPlayers, "maximum");
-				var allMinimums = _.pluck(aggregateStatsForAllPlayers, "minimum");
-				var allMaximumCumulativeAverages = _.pluck(_.pluck(allMaximums, "cumulativeAverage"), "cumulativeAverage");
-				var allMinimumCumulativeAverages = _.pluck(_.pluck(allMinimums, "cumulativeAverage"), "cumulativeAverage");
-				var maximumCulumativeAverage = _.max(allMaximumCumulativeAverages);
-				var minimumCumulativeAverage = _.min(allMinimumCumulativeAverages);
-
-				//THis gets me a decent domain for the Y axis
-
-				yScale.domain([minimumCumulativeAverage, maximumCulumativeAverage]);
-
-				//Set up Y Axis
-				/*yScale = d3.scale.linear()
-						.domain([minimumCumulativeAverage, maximumCulumativeAverage])
-						.range([height - paddingX, paddingX])
-						.nice()
-					;
-
-				yAxis = d3.svg.axis()
-						.orient("left")
-						.tickFormat(d3.format('.03f'))           //we want 3 significant digits
-						.scale(yScale)
-					;
-
-				//Draw Y axis
-				chart.append("g")
-					.attr("class", "axis")
-					.attr("transform", "translate("+paddingX+",0)")      //this positions the Y axis
-					.call(yAxis);
-				*/
-
-				//x.domain(d3.extent(data, function(d) { return d.date; }));
-				//y.domain(d3.extent(data, function(d) { return d.close; }));
-				//We need a line
-
-				//var prevAverage = 0;
-				var line = d3.svg.line()
-					.x(function(d) { return xScale(d.date); })
-					.y(
-					function(d) {
-						/*if(d.cumulativeAverage){
-							prevAverage = d.cumulativeAverage;
-							return yScale(d.cumulativeAverage);
-						} else {
-							return yScale(prevAverage);
-						}*/
-						return yScale(d.cumulativeAverage);
-					})
-					.interpolate("basis");
-
-
-				scope.$watch("player", function(player){
-					//prevAverage = 0;
-					if(player){
-
-						xScale.domain(d3.extent(player.games, function(d) { return d.date; }));
-						//yScale.domain(d3.extent(player.games, function(d) { return d.cumulativeAverage}));
-
-
-						console.log(player);
-
-						//Set up X axis
-
-						//Get the dates for the x axis charting
-						dates = _.pluck(player.games, "dates");
-
-
-
-						/*xScale = d3.time.scale.utc()
-							.domain([player.firstGame.date, player.lastGame.date])
-							.range([paddingY, width - paddingY])
-						;*/
-
-						xAxis = d3.svg.axis()
-							.orient("bottom")
-							.scale(xScale)
-						;
-
-						yAxis = d3.svg.axis()
-							.orient("left")
-							.scale(yScale)
-                            .tickFormat(d3.format('.03f'))           //we want 3 significant digits
-						;
-
-
-						//Remove old X axis
-						chart.selectAll("xaxis").remove();
-						//Draw X Axis and labels
-						chart.append("g")
-							.attr("class", "axis xaxis")   // give it a class so it can be used to select only xaxis labels  below
-							.attr("transform", "translate(0," + (height - paddingY) + ")")          //this positions the xaxis
-							.call(xAxis)
-							.selectAll("text")
-							.attr("y", 0)
-							.attr("x", 9)
-							.attr("dy", ".35em")
-							.attr("transform", "rotate(90)")
-							.style("text-anchor", "start")
-						;
-
-						//Draw Y axis
-						chart.append("g")
-							.attr("class", "axis")
-							.attr("transform", "translate("+paddingX+",0)")      //this positions the Y axis
-							.call(yAxis);
-
-
-						//And get the data we're charting
-
-						//console.log(player.games);
-						//var data = _.pluck(player.games, "cumulativeAverage");
-
-						//var data =
-						chart.selectAll("path")
-							.datum(player.games)
-							.attr("class", "line")
-							.attr("d", line)
-						;
-							//.enter()
-						//console.log(data);
-						//chart.selectAll("g")
-						//	.data(data)
-						//chart.data(data)
-						//	.enter()
-
-
-					}
-
-
-
-
-
-					//Draw X and Y Axis
-					// draw y axis with labels and move in from the size by the amount of padding
-
-				});
-
-
-
-
-
-			}
-		}
-	}])
 ;
