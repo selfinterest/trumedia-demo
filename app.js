@@ -17,6 +17,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
 		//Make some players based on the data. We use an object to store players to make it easier to later look them up later
 		var players = {};
+        var DEFAULT_STAT = "AVG";
 
 		angular.forEach(playerData, function(data){
 			players[data.id] = new Player(data);
@@ -28,11 +29,11 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 		//When empty state, redirect to first player
 		$urlRouterProvider.when('', '/players/'+playerData[0].id);
 
-		//When no player specified, redirect to first player
-		$urlRouterProvider.when('/players', '/players/'+playerData[0].id);
+		//When no player specified, redirect to first player and AVG stat
+		$urlRouterProvider.when('/players', '/players/'+playerData[0].id + "/" + DEFAULT_STAT);
 
-        //When no stat specified, redirect to AVG
-        $urlRouterProvider.rule()
+        //When no stat specified, redirect to AVG stat.
+        $urlRouterProvider.when('/players/:id', '/players/:id/'+DEFAULT_STAT);
 
 
 		$stateProvider
@@ -42,7 +43,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 				templateUrl: "base.html",
 				controller: "BaseController",
 				resolve: {
-					players: [function(){           //resolvers have to be functions.
+					players: [function(){           //resolvers have to be functions. Normally, we'd be getting players from an Ajax call here.
 						return players;
 					}]
 				}
@@ -55,25 +56,32 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 				}]
 			})
 			.state('players.player', {
-				url: "/{playerId}",             //playerId must be integer
+				url: "/{playerId}/{stat}",             //playerId must be integer
 				templateUrl: "player.html",
 				controller: "PlayerController",
 				sticky: true,
 				deepStateRedirect: true,
-				onEnter: ["selectedPlayer", "$state", "$rootScope", function(selectedPlayer, $state, $rootScope){
+				onEnter: ["selectedPlayer", "stat", "$state", "$rootScope", function(selectedPlayer, stat, $state, $rootScope){
 					$rootScope.player = selectedPlayer;
+                    $rootScope.stat = stat;
 
 					if(!selectedPlayer){        //player not found. Go to the "player not found" view, but do NOT update location.
 						$state.go("players.playerNotFound", {}, {location: false});
 					} else {
 						$rootScope.$broadcast("playerSelected", selectedPlayer);
-
 					}
+
+                    if(!stat) {
+                        $state.go("players.player", {playerId: selectedPlayer.id, stat: "AVG"});
+                    }
 				}],
 				resolve: {
 					selectedPlayer: ["$stateParams",  function($stateParams){
 						return players[$stateParams.playerId] || null;
-					}]
+					}],
+                    stat:  ["$stateParams", function($stateParams){
+                        return $stateParams.stat || null;
+                    }]
 				}
 			})
 
@@ -179,7 +187,134 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 	.controller("TableController", ["$scope", function($scope){
 
 	}])
-	.directive("chart", ["$window", function($window){
+    .directive("chart", ["$window", "$stateParams", function($window, $stateParams){
+        return {
+            restrict: "A",
+            templateNamespace: "svg",
+            template: "<svg id='chart'></svg>",
+            link: function(scope, element, attr){
+                var width = parseInt($window.getComputedStyle(element[0]).width, 10);
+                var height = 400, barHeight = 20;           //fixed height. Might need to fix this.
+                var paddingX = 50, paddingY = 50;
+
+                var chart = d3.select("#chart");
+
+                var xScale, yScale;
+
+                chart
+                    .attr("width", width)
+                    .attr("height", height)
+                ;
+
+                //Notice we set up the ranges of the scale first. This is because we don't necessarily know the selected player yet.
+                xScale = d3.scale.ordinal()
+                    .rangeRoundBands([paddingY, width - paddingY])
+
+                ;
+
+                yScale = d3.scale.linear()
+                    .range([height - paddingX, paddingX])
+                    .nice();
+
+                var bar, player, stat, data, max, xAxis, yAxis;
+
+                //Axes
+                xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient("bottom")
+                    //.tickFormat(d3.time.format("%b"))
+                ;
+
+                yAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient("left")
+                ;
+
+                var parseDate = d3.time.format("%Y-%m").parse;
+
+                scope.$watchGroup(['player', 'stat'], function(newValues){
+                    console.log("Drawing graph");
+
+                    player = newValues[0];
+                    stat = newValues[1];
+
+                    //Extract data into an array of objects (date, value)
+                    data = _.pairs(player.aggregateStats.months);
+
+                    data = _.map(data, function(d){
+                       //Number cast is so that JavaScript adds the numbers, rather than concacting them.
+                       var adjustedMonth = Number(d[0]) + 1;        //JavaScript uses base 0 dates. D3 doesn't, or doesn't need to.
+
+                       return {
+                           date: adjustedMonth,
+                           value: +d[1][stat]
+                       }
+                    });
+
+
+
+                    console.log(data);
+
+                    //Recalculate scales
+
+                    xScale.domain(data.map(function(d){
+                        return d.date;
+                    }));
+
+
+
+                    yScale.domain([0, d3.max(data, function(d){
+                        return d.value;
+                    })]);
+
+                    //Apply axes
+                    var xAxisPosition = height - paddingY;
+
+                    //X axis
+                    chart.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0, " + xAxisPosition + ")")
+                        .call(xAxis)
+                    .selectAll("text")
+                        .style("text-anchor", "end")
+                        .attr("dx", "-.8em")
+                        .attr("dy", "-.55em")
+                        .attr("transform", "rotate(-90)")
+                    ;
+
+                    var yAxisPosition = paddingX;
+                    
+                    //Y axis
+                    chart.append("g")
+                        .attr("class", "y axis")
+                        .attr("transform", "translate("+yAxisPosition + ",0)")
+                        .call(yAxis)
+                    ;
+
+
+                    bar = chart.selectAll("g")
+                        .data(data)
+                        .enter().append("g")
+                        .attr("transform", function(d, i){
+                            return "translate(0," + i * barHeight + ") ";
+                        })
+                    ;
+
+                    //Add rectangle to each bar
+                    bar.append("rect")
+                        .attr("width", function(d){
+                            console.log(arguments);
+                            return xScale(d[1][stat]);
+                        })
+                        .attr("height", barHeight - 1)
+                    ;
+
+                });
+
+            }
+        }
+    }])
+	.directive("chart2", ["$window", "$stateParams", function($window, $stateParams){
 		return {
 			restrict: "A",
 			templateNamespace: "svg",
