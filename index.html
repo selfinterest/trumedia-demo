@@ -36,6 +36,14 @@
                             <div class="col-sm-10 col-xs-12">
                                 <div class="row" ng-controller="ChartController">
                                     <div class="col-sm-12">
+                                        <label> Stat to chart
+                                            <select class="form-control" ng-model="selectedStat">
+                                                <option>AVG</option>
+                                                <option ng-repeat="someStat in player.stats">{{someStat}}</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-12">
                                         <div chart></div>
                                     </div>
                                 </div>

@@ -111,77 +111,20 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 			$scope.log(err);
 		});
 	}])
-	.controller("ChartController", ["$scope", function($scope){
-		//Find out some dimensions
-		//var container = angular.element("#chart");
+	.controller("ChartController", ["$scope", "$state", "$stateParams", function($scope, $state, $stateParams){
+        //This controller is only loaded once
+        $scope.selectedStat = $scope.stat;
 
-		//Add the SVG container
-		/*var width = container.width(),
-			height = 400,
-			padding = 100;
+        //Old trick: two watches to keep two primitives in sync.
+        $scope.$watch("selectedStat", function(newStat){
+            $state.go("players.player", {playerId: $scope.player.id, stat: newStat});
+        });
 
-		var chart = d3.select("#chart").
-			append("svg:svg")
-			.attr("width", width)
-			.attr("height", height);
-
-		var yScale = d3.scale.linear()
-			.domain([0, 1])    // values between 0 and 1
-			.range([height - padding, padding]);   // map these to the chart height, less padding.
-
-		// define the y axis
-		var yAxis = d3.svg.axis()
-			.orient("left")
-			.scale(yScale);
-
-		var xScale, xAxis;
-
-
-		//REMEMBER: y axis range has the bigger number first because the y value of zero is at the top of chart and increases as you go down.
-
-		//We need to recalculate certain things each time the selected player changes. Use a watch for that.
-		var scale;
-
-
-		$scope.$watch("player", function(player){
-			var dates = _.pluck(player.games, "date");
-			xScale = d3.time.scale.utc()
-				.domain([dates[0], dates[dates.length - 1]])    // values between for month of january
-				.range([padding, width - padding * 2])
-				//.nice()
-			;
-
-			xAxis = d3.svg.axis()
-				.orient("bottom")
-				.ticks(d3.time.months.utc, 1)
-				.scale(xScale)
-
-			// draw y axis with labels and move in from the size by the amount of padding
-			chart.append("g")
-				.attr("transform", "translate("+padding+",0)")
-				.call(yAxis);
-
-			chart.append("g")
-				.attr("class", "xaxis")   // give it a class so it can be used to select only xaxis labels  below
-				.attr("transform", "translate(0," + (height - padding) + ")")
-				.call(xAxis);
-
-
-			/*chart.selectAll(".xaxis text")
-				.attr("transform", function(d){
-					return "translate(, 20)rotate(-45)";
-				})
-*/
-			// now rotate text on x axis
-			// solution based on idea here: https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
-			// first move the text left so no longer centered on the tick
-			// then rotate up to get 45 degrees.
-			//chart.selectAll(".xaxis text")  // select all the text elements for the xaxis
-			//	.attr("transform", function(d) {
-			//		return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-45)";
-			//	});
-
-		//});
+        $scope.$watch(function(){
+            return $stateParams.stat;
+        }, function(newStat){
+            $scope.selectedStat = newStat;
+        })
 
 	}])
 	.controller("TableController", ["$scope", function($scope){
@@ -194,7 +137,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             template: "<svg id='chart'></svg>",
             link: function(scope, element, attr){
                 var width = parseInt($window.getComputedStyle(element[0]).width, 10);
-                var height = 400, barHeight = 20;           //fixed height. Might need to fix this.
+                var height = 300, barHeight = 20;           //fixed height. Might need to fix this.
                 var paddingX = 50, paddingY = 50;
 
                 var chart = d3.select("#chart");
@@ -208,7 +151,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
                 //Notice we set up the ranges of the scale first. This is because we don't necessarily know the selected player yet.
                 xScale = d3.scale.ordinal()
-                    .rangeRoundBands([paddingY, width - paddingY])
+                    .rangeRoundBands([paddingY, width - paddingY], 0.5)
 
                 ;
 
@@ -251,7 +194,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     .attr("transform", "translate(0, " + xAxisPosition + ")")
                 ;
 
-      
+
                 scope.$watchGroup(['player', 'stat'], function(newValues){
                     console.log("Drawing graph");
 
@@ -290,10 +233,17 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                        return d.value;
                     }).value;
 
-                    if(maxY > 10 ){
+                    if(maxY > 10 || stat == "AVG" ){
                         yAxis.ticks(10)
                     } else {
                         yAxis.ticks(maxY);
+                    }
+
+
+                    if(stat == "AVG") {
+                        yAxis.tickFormat(d3.format('.03f')); //three significant digits if we're working with AVG
+                    } else {
+                        yAxis.tickFormat(d3.format("d"));
                     }
 
 
@@ -308,8 +258,27 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     ;
 
                     //Y axis
-                    chart.selectAll("g.y.axis").call(yAxis);
+                    chart.selectAll("g.y.axis").call(yAxis)
+                        .selectAll("text")
+                    ;
 
+
+                    //Graph the data
+                    chart.selectAll("bar")
+                        .data(data)
+                        .enter().append("rect")
+                        .style("fill", "steelblue")
+                        .attr("x", function(d){
+                            return xScale(d.date)
+                        })
+                        .attr("width", xScale.rangeBand())
+                        .attr("y", function(d){
+                            return yScale(d.value);
+                        })
+                        .attr("height", function(d){
+                            return height - paddingY - yScale(d.value);
+                        })
+                    ;
                     /*bar = chart.selectAll("g")
                         .data(data)
                         .enter().append("g")
