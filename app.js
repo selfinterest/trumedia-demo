@@ -218,11 +218,17 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
                 var bar, player, stat, data, max, xAxis, yAxis;
 
+                var parseDate = d3.time.format("%b");
+
                 //Axes
                 xAxis = d3.svg.axis()
                     .scale(xScale)
                     .orient("bottom")
-                    //.tickFormat(d3.time.format("%b"))
+                    .tickFormat(function(month){
+                        //Turn into month name
+                        var monthNameFormat = d3.time.format("%b");
+                        return monthNameFormat(new Date(2014, month - 1, 1));
+                    });
                 ;
 
                 yAxis = d3.svg.axis()
@@ -230,8 +236,22 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     .orient("left")
                 ;
 
-                var parseDate = d3.time.format("%Y-%m").parse;
 
+                var yAxisPosition = paddingX;
+
+                chart.append("g")
+                    .attr("class", "y axis")
+                    .attr("transform", "translate("+yAxisPosition + ",0)")
+                ;
+
+                var xAxisPosition = height - paddingY;
+
+                chart.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0, " + xAxisPosition + ")")
+                ;
+
+      
                 scope.$watchGroup(['player', 'stat'], function(newValues){
                     console.log("Drawing graph");
 
@@ -255,8 +275,6 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
                     console.log(data);
 
-                    //Recalculate scales
-
                     xScale.domain(data.map(function(d){
                         return d.date;
                     }));
@@ -267,14 +285,21 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                         return d.value;
                     })]);
 
-                    //Apply axes
-                    var xAxisPosition = height - paddingY;
 
-                    //X axis
-                    chart.append("g")
-                        .attr("class", "x axis")
-                        .attr("transform", "translate(0, " + xAxisPosition + ")")
-                        .call(xAxis)
+                    var maxY = _.max(data, function(d){
+                       return d.value;
+                    }).value;
+
+                    if(maxY > 10 ){
+                        yAxis.ticks(10)
+                    } else {
+                        yAxis.ticks(maxY);
+                    }
+
+
+                    //Reapply the axes
+
+                    chart.selectAll("g.x.axis").call(xAxis)
                     .selectAll("text")
                         .style("text-anchor", "end")
                         .attr("dx", "-.8em")
@@ -282,17 +307,10 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                         .attr("transform", "rotate(-90)")
                     ;
 
-                    var yAxisPosition = paddingX;
-                    
                     //Y axis
-                    chart.append("g")
-                        .attr("class", "y axis")
-                        .attr("transform", "translate("+yAxisPosition + ",0)")
-                        .call(yAxis)
-                    ;
+                    chart.selectAll("g.y.axis").call(yAxis);
 
-
-                    bar = chart.selectAll("g")
+                    /*bar = chart.selectAll("g")
                         .data(data)
                         .enter().append("g")
                         .attr("transform", function(d, i){
@@ -307,7 +325,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                             return xScale(d[1][stat]);
                         })
                         .attr("height", barHeight - 1)
-                    ;
+                    ;*/
 
                 });
 
