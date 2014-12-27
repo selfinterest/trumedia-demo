@@ -21,10 +21,6 @@ function Player(playerData){
         //Sort the collection of games
         this.games = _.sortBy(this.games, "date");
 
-        //Group games into months
-        this.months = _.groupBy(this.games, function(game){
-            return game.date.getMonth();
-        });
 
         //And get only the games where the player had an at bat
         this.gamesAtBat = _.filter(this.games, function(game){
@@ -35,6 +31,14 @@ function Player(playerData){
         _.each(this.gamesAtBat, function(game){
             game.AVG = Math.round(game.H / game.AB * 1000)/1000;
         });
+
+        //Group games at bat into months
+        this.months = _.groupBy(this.gamesAtBat, function(game){
+            return game.date.getMonth();
+        });
+
+
+
 
         this.href = "/"+this.id;      //this is the URL that will represent the player in our view
 

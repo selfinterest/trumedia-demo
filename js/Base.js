@@ -51,14 +51,15 @@ Base.prototype.sumUp = function(games, stat){
 
 
 /**
- * Applies a function to each stat in a set
- * @param {Function} someFunction The function to apply
+ * Applies a function to each stat in a set across a collection of games
  * @param {Array} games The array of games
+ * @param {Function} someFunction The function to apply
  * @param {Array=} someStats an array of stats. Optional.
  * @returns {Object} An object, keys will be stats, values will be the value of the stat across all games, as calculated by the function
  */
-Base.prototype.applyToEachStatForAllGames = function(someFunction, games, someStats){
+Base.prototype.applyToEachStatForAllGames = function(games, someFunction, someStats){
     if(!someStats) someStats = this.stats;                       //if not defined, use the default set of stats
+
 
     var resultObject = {};
 

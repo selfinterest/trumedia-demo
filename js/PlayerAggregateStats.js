@@ -16,10 +16,32 @@ function PlayerAggregateStats(player){
     //As far as I can tell, I'm only interested in games in which the player was actually at bat. So:
     var games = player.gamesAtBat;
 
-    this.total = this.applyToEachStatForAllGames(this.sumUp, games);
+    this.total = this.applyToEachStatForAllGames(games, this.sumUp);
 
     this.AVG = Math.round(this.total.H / this.total.AB * 1000)/1000;    //Overall average
 
+
+    console.log("Calculating months");
+
+    //Aggregate each month. Essentially, we're disassembling the big month object into components, aggregating the values, and producing a new month object with those values
+    this.months = {};
+    this.months.total = _.chain(player.months)
+        .keys()                                     //Extract months into an array
+        .reduce(_.bind(function(resultObject, month){
+            resultObject[month] = this.applyToEachStatForAllGames(player.months[month], this.sumUp);
+            return resultObject;
+        }, this), {})
+        .value();
+
+    this.months.AVG = _.chain(player.months)
+        .keys()
+        .reduce(_.bind(function(resultObject, month){
+            resultObject[month] = Math.round(this.months.total[month].H / this.months.total[month].AB * 1000)/1000;
+            return resultObject;
+        }, this), {})
+        .value();
+
+    //this.months = months.reduce(function(resultObject
     /**
      * Returns a function that can calculate a moving average for a data series
      * @param period
