@@ -31,6 +31,10 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 		//When no player specified, redirect to first player
 		$urlRouterProvider.when('/players', '/players/'+playerData[0].id);
 
+        //When no stat specified, redirect to AVG
+        $urlRouterProvider.rule()
+
+
 		$stateProvider
 			.state('players', {
 				abstract: true,
