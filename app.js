@@ -56,7 +56,8 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 				}]
 			})
 			.state('players.player', {
-				url: "/{playerId}/{stat}",             //playerId must be integer
+				abstract: true,
+                url: "/{playerId}/{stat}",             //playerId must be integer
 				templateUrl: "player.html",
 				controller: "PlayerController",
 				sticky: true,
@@ -72,7 +73,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 					}
 
                     if(!stat) {
-                        $state.go("players.player", {playerId: selectedPlayer.id, stat: "AVG"});
+                        $state.go("players.player.withTable", {playerId: selectedPlayer.id, stat: "AVG"});
                     }
 				}],
 				resolve: {
@@ -84,6 +85,14 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     }]
 				}
 			})
+            .state('players.player.withTable', {
+                url: "",
+                controller: "TableController",
+                template: '<div class="stat-grid" ui-grid="gridOptions"></div>',
+                onEnter: function(){
+                    console.log("HERE");
+                }
+            })
 
 		;
 
@@ -117,7 +126,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
         //Old trick: two watches to keep two primitives in sync.
         $scope.$watch("selectedStat", function(newStat){
-            $state.go("players.player", {playerId: $scope.player.id, stat: newStat});
+            $state.go("players.player.withTable", {playerId: $scope.player.id, stat: newStat});
         });
 
         $scope.$watch(function(){
@@ -130,7 +139,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 	.controller("TableController", ["$scope", function($scope){
 
         $scope.gridOptions = {
-            data: $scope.player.gamesAtBat,
+            data: player.gamesAtBat,
             enableSorting: true,
             columnDefs: [
                 {field: "date", width: "*", cellTemplate: '<div class="ui-grid-cell-contents"><span>{{COL_FIELD | date: "yyyy-MMM-d"}}</span></div>'},
