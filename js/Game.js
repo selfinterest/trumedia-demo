@@ -19,11 +19,21 @@ Game.prototype.parseGameDate = function(gameDate){
     }
 };
 
+Game.prototype.combineTeams = function(){
+    return {
+        opp: this.opp,
+        oppImage: this.oppImage,
+        team: this.team,
+        teamImage: this.teamImage
+    };
+};
+
 function Game(gameData){
     if(this instanceof Game){
         this.mergeDataProperties(gameData);
         this._date = this.date;             //Backup the original property
         this.date = this.parseGameDate(this.date);
+        this.teams = this.combineTeams();
 
     } else {
         return new Game(gameData);

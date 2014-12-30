@@ -88,11 +88,6 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             .state('players.player.withTable', {
                 url: "",
                 controller: "TableController",
-                /*resolve: {
-                    selectedPlayer: ["$stateParams",  function($stateParams){
-                        return players[$stateParams.playerId] || null;
-                    }],
-                },*/
                 views: {
                   "table@players": {
                       templateUrl: "table.html",
@@ -150,19 +145,34 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
         var data = [];
 
         $scope.$watch("player", function(newPlayer, oldVal){
-        
+            //Make a copy of the data. The table watches for data changes _by reference_, so simply switching the player reference is not enough.
             angular.copy(newPlayer.gamesAtBat, data);
+            console.log(data);
+            /*data.forEach(function(game){
+               game.getTeams = function(){      //Extremely inefficient, but has to be done.
+                   return {
+                       opp: this.opp,
+                       oppImage: this.oppImage,
+                       team: this.team,
+                       teamImage: this.teamImage
+                   };
+
+               };
+            });*/
         });
+
 
         $scope.gridOptions = {
             data: data,
             enableSorting: true,
             columnDefs: [
                 {field: "date", width: "*", cellTemplate: '<div class="ui-grid-cell-contents"><span>{{COL_FIELD | date: "yyyy-MMM-d"}}</span></div>'},
-                {field: "AVG", width: "6%"}
+                {field: "teams", displayName: "Teams",
+                    cellTemplate: '<div class="ui-grid-cell-contents"><span><img class="team-logo" ng-src="{{COL_FIELD.oppImage}}"> {{ COL_FIELD.opp}} vs. <img class="team-logo" ng-src="{{COL_FIELD.teamImage}}"> {{COL_FIELD.team}}</span></div>'},
+                {field: "AVG", width: "6%", displayName: "AVG"}
             ]
                 .concat(_.map($scope.player.stats, function(stat){
-                    return {field: stat, width: "6%"};
+                    return {field: stat, width: "6%", displayName: stat.toUpperCase()};
                 }))
         }
 	}])
@@ -243,28 +253,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     player = newValues[0];
                     stat = newValues[1];
 
-//                    if(!scope.data) {
-//                        scope.data = [];
-//                        for(var x = 3; x < 10; x++){
-//                            scope.data.push({
-//                                date: x,
-//                                value: 0
-//                            });
-//                        }
-//                    }
-//
-//                    //Scope data is an array that is full of objects. Those objects retain their identity no matter how many times a graph is generated.
-//
-//                    _.each(scope.data, function(dataObject){
-//                       //Update the values
-//                       if(player.aggregateStats.months[dataObject.date - 1]){      //-1 because JS dates are dumb
-//                           dataObject.value = player.aggregateStats.months[dataObject.date - 1][stat];
-//                       } else {
-//                           dataObject.value = 0;
-//                       }
-//                    });
-//
-//                    console.log(scope.data);
+
 
                     //Extract data into an array of objects (date, value)
                     var pairs = _.pairs(player.aggregateStats.months);
@@ -375,6 +364,24 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                 });
 
             }
+        }
+    }])
+    .directive("versus", [ function(){
+        //A directive that produces a "away vs. home" display, mainly for use in the table
+        return {
+            restrict: "A",
+            template: "<div>{{teams.opp}}</div>",
+            link: function(scope, element, attrs){
+                attrs.$observe("teams",  function(attrs){
+                    console.log(attrs);
+                    //scope.teams = $compile(attrs.teams)(scope);
+                    scope.teams = scope.$eval(attrs.teams);
+                });
+
+
+            }
+
+
         }
     }])
 ;
