@@ -58,7 +58,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 			.state('players.player', {
 				abstract: true,
                 url: "/{playerId}/{stat}",             //playerId must be integer
-				templateUrl: "player.html",
+
 				controller: "PlayerController",
 				sticky: true,
 				deepStateRedirect: true,
@@ -88,7 +88,11 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             .state('players.player.withTable', {
                 url: "",
                 controller: "TableController",
-                template: '<div class="stat-grid" ui-grid="gridOptions"></div>',
+                views: {
+                  "table@players": {
+                      templateUrl: "table.html",
+                  }
+                },
                 onEnter: function(){
                     console.log("HERE");
                 }
@@ -139,7 +143,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 	.controller("TableController", ["$scope", function($scope){
 
         $scope.gridOptions = {
-            data: player.gamesAtBat,
+            data: $scope.player.gamesAtBat,
             enableSorting: true,
             columnDefs: [
                 {field: "date", width: "*", cellTemplate: '<div class="ui-grid-cell-contents"><span>{{COL_FIELD | date: "yyyy-MMM-d"}}</span></div>'},

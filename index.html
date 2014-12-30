@@ -13,7 +13,7 @@
             <div class="col-md-12">
                 <ul class="nav nav-pills nav-justified">
                     <li ng-repeat="(playerId, player) in players" ui-sref-active="active">
-                        <a ui-sref="players.player.withTable({playerId: playerId})"  href="{{player.href}}">{{player.name}}</a>
+                        <a ui-sref="players.player.withTable({playerId: playerId})">{{player.name}}</a>
                     </li>
                 </ul>
             </div>
@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="row">
                                     <!-- table goes here --> 
-                                    <div class="col-sm-12" ui-view>
+                                    <div class="col-sm-12" ui-view="table">
 
                                     </div>
                                 </div>
@@ -57,26 +57,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </script>
-
-    <script type="text/ng-template" id="player.html">
-        <!-- the player template -->
-        <div class="col-md-12">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <div class="row">
-                        <!-- player view, right column -->
-                        <div class="col-sm-10 col-xs-12">
-                            <!-- top -->
-
-                            <!-- bottom -->
-
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </script>
@@ -107,7 +87,9 @@
         </div>
     </script>
 
-
+    <script type="text/ng-template" id="table.html">
+        <div ui-grid="gridOptions"></div>
+    </script>
 </head>
 <body>
     <div class="container" ui-view>
