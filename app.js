@@ -88,6 +88,11 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             .state('players.player.withTable', {
                 url: "",
                 controller: "TableController",
+                /*resolve: {
+                    selectedPlayer: ["$stateParams",  function($stateParams){
+                        return players[$stateParams.playerId] || null;
+                    }],
+                },*/
                 views: {
                   "table@players": {
                       templateUrl: "table.html",
@@ -142,8 +147,15 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 	}])
 	.controller("TableController", ["$scope", function($scope){
 
+        var data = [];
+
+        $scope.$watch("player", function(newPlayer, oldVal){
+        
+            angular.copy(newPlayer.gamesAtBat, data);
+        });
+
         $scope.gridOptions = {
-            data: $scope.player.gamesAtBat,
+            data: data,
             enableSorting: true,
             columnDefs: [
                 {field: "date", width: "*", cellTemplate: '<div class="ui-grid-cell-contents"><span>{{COL_FIELD | date: "yyyy-MMM-d"}}</span></div>'},
