@@ -251,18 +251,12 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     .attr("transform", "translate(0, " + xAxisPosition + ")")
                 ;
 
-
-                //scope.data = [];
-
-
-
-
+                //The watch -- where all the action is.
                 scope.$watchGroup(['player', 'stat'], function(newValues){
 
 
                     player = newValues[0];
                     stat = newValues[1];
-
 
 
                     //Extract data into an array of objects (date, value)
@@ -274,7 +268,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
                        return {
                            date: adjustedMonth,
-                           value: +d[1][stat]
+                           value: +d[1][stat]           //ensure value is Number through explicit casting
                        }
                     });
 
@@ -283,9 +277,6 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     xScale.domain(scope.data.map(function(d){
                         return d.date;
                     }));
-
-                    //xScale.domain([3,4,5,6,7,8,9]);
-
 
 
                     yScale.domain([0, d3.max(scope.data, function(d){
@@ -345,6 +336,8 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                             return xScale(d.date)
                         })
                     ;
+
+                    
 
                     bar.enter().append("rect")
                         .style("fill", "steelblue")
