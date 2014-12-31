@@ -69,3 +69,40 @@ Base.prototype.applyToEachStatForAllGames = function(games, someFunction, someSt
 
     return resultObject;
 };
+
+
+/**
+ * Returns a function that can calculate a moving average for a data series
+ * @param period
+ * @returns {Function}
+ */
+Base.prototype.generateMovingAverageFunction = function(period) {
+    var nums = [];
+    return function(num) {
+        //debugger;
+        nums.push(num);
+        if (nums.length > period)
+            nums.splice(0,1);  // remove the first element of the array
+        var sum = 0;
+        for (var i in nums)
+            sum += nums[i];
+        var n = period;
+        if (nums.length < period)
+            n = nums.length;
+        return(sum/n);
+    }
+}
+
+Base.prototype.generateCumulativeMovingAverageFunction = function(){
+    var n = 0;
+    var cumulativeAverage = 0;
+
+    return function(newData){
+        var x = cumulativeAverage * n;
+        x = x + newData;
+        x = x / (n + 1);
+        cumulativeAverage = x;
+        n++;
+        return cumulativeAverage;
+    }
+};

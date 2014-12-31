@@ -174,6 +174,8 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                 d3.select(window).on('resize', resize);
 
                 function resize(){
+
+                    //This updates the chart's dimensions. Most of this repeats stuff below. Should probably be gathered in one place.
                     width = parseInt(element[0].offsetWidth, 10);
                     xScale.rangeRoundBands([paddingY, width - paddingY], 0.5);
                     chart.attr("width", width);
@@ -191,7 +193,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                 }
 
                 var width = parseInt(element[0].offsetWidth, 10);
-            
+
                 var height = 300, barHeight = 20;           //fixed height. Might need to fix this.
                 var paddingX = 50, paddingY = 50;
 
