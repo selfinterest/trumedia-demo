@@ -174,17 +174,24 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                 d3.select(window).on('resize', resize);
 
                 function resize(){
-
-                    width = element[0].offsetWidth;
-                    console.log("Resizing to "+width);
+                    width = parseInt(element[0].offsetWidth, 10);
                     xScale.rangeRoundBands([paddingY, width - paddingY], 0.5);
-                    d3.select(chart.node().parentNode)
-                        //.style('height', (yScale.rangeExtent()[1] + margin.top + margin.bottom) + 'px')
-                        .style('width', (width + paddingX) + 'px');
+                    chart.attr("width", width);
+                    chart.selectAll("g.x.axis").call(xAxis);
+                    bar = chart.selectAll(".bar");
+                    bar
+                        .attr("x", function(d){
+                            return xScale(d.date)
+                        })
+                        .attr("width", xScale.rangeBand())
+                    ;
+
+
+
                 }
 
                 var width = parseInt(element[0].offsetWidth, 10);
-                //var width = parseInt($window.getComputedStyle(element[0]).width, 10);
+            
                 var height = 300, barHeight = 20;           //fixed height. Might need to fix this.
                 var paddingX = 50, paddingY = 50;
 
