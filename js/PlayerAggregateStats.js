@@ -38,17 +38,15 @@ function PlayerAggregateStats(player){
                         r[team] = this.applyToEachStatForAllGames(teams[team], this.sumUp);
                         r[team].AVG = Math.round(r[team].H / r[team].AB * 1000)/1000;
                         r[team].AVG = r[team].AVG.toFixed(3);
+                        r[team].teamInfo = _.pick(teams[team][0], 'opp', 'oppImage', 'team', 'teamImage');
+
                         return r;
                     }, this), {}).value();
-                //resultObject[month].performanceByTeam =
-                //console.log();
+
 
         return resultObject;
         }, this), {})
         .value();
-
-
-    //this.monthlyCumulativeAverageFunctions = {};
 
 
 
