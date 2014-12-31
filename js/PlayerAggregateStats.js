@@ -33,21 +33,9 @@ function PlayerAggregateStats(player){
         .value();
 
 
+    //this.monthlyCumulativeAverageFunctions = {};
 
-    /**
-     * Applies a function to each of the stats.
-     * @param {Function} someFunction Function to call
-     * @param {Array} someArguments The arguments to use when the function is called
-     * @param {Array} someStats
-     * @returns {object} Keys are stat names, values are results of applying the function
-     */
-    function applyToEachStat(someFunction, someArguments, someStats){
-        if(!someStats) someStats = stats;
-        return _.reduce(someStats, function(resultObject, stat){
-            resultObject[stat] = someFunction.apply(null, someArguments.concat(stat));          //apply the passed arguments, plus the stat
-            return resultObject;
-        }, {});
 
-    }
+
 
 }

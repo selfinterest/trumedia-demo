@@ -194,7 +194,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
                 var width = parseInt(element[0].offsetWidth, 10);
 
-                var height = 300, barHeight = 20;           //fixed height. Might need to fix this.
+                var height = 320, barHeight = 20;           //fixed height. Might need to fix this.
                 var paddingX = 50, paddingY = 50;
 
                 var chart = d3.select("#chart");
