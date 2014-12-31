@@ -264,7 +264,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                     //Extract data into an array of objects (date, value)
                     var pairs = _.pairs(player.aggregateStats.months);
 
-                    data = _.map(pairs, function(d){
+                    /*data = _.map(pairs, function(d){
                         var adjustedMonth = Number(d[0]) + 1;
                         //I need an array with four items: the top three teams for the selected stat, for that month
                         var teamPairs = _.pairs(d[1].byTeam);
@@ -285,9 +285,9 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                             date: adjustedMonth,
                             value: +d[1][stat]
                         }
-                    });
+                    });*/
 
-                    //debugger;
+
                     data = _.map(pairs, function(d){
                        //Number cast is so that JavaScript adds the numbers, rather than concacting them.
                        var adjustedMonth = Number(d[0]) + 1;        //JavaScript uses base 0 dates. D3 doesn't, or doesn't need to.
