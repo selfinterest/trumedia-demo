@@ -90,11 +90,11 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                 controller: "TableController",
                 views: {
                   "table@players": {
-                      templateUrl: "table.html",
+                      templateUrl: "table.html"
                   }
                 },
                 onEnter: function(){
-                    console.log("HERE");
+
                 }
             })
 
@@ -147,18 +147,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
         $scope.$watch("player", function(newPlayer, oldVal){
             //Make a copy of the data. The table watches for data changes _by reference_, so simply switching the player reference is not enough.
             angular.copy(newPlayer.gamesAtBat, data);
-            console.log(data);
-            /*data.forEach(function(game){
-               game.getTeams = function(){      //Extremely inefficient, but has to be done.
-                   return {
-                       opp: this.opp,
-                       oppImage: this.oppImage,
-                       team: this.team,
-                       teamImage: this.teamImage
-                   };
 
-               };
-            });*/
         });
 
 
@@ -182,8 +171,20 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
             templateNamespace: "svg",
             template: "<svg id='chart'></svg>",
             link: function(scope, element, attr){
-                console.log("Directive loaded");
-                var width = parseInt($window.getComputedStyle(element[0]).width, 10);
+                d3.select(window).on('resize', resize);
+
+                function resize(){
+
+                    width = element[0].offsetWidth;
+                    console.log("Resizing to "+width);
+                    xScale.rangeRoundBands([paddingY, width - paddingY], 0.5);
+                    d3.select(chart.node().parentNode)
+                        //.style('height', (yScale.rangeExtent()[1] + margin.top + margin.bottom) + 'px')
+                        .style('width', (width + paddingX) + 'px');
+                }
+
+                var width = parseInt(element[0].offsetWidth, 10);
+                //var width = parseInt($window.getComputedStyle(element[0]).width, 10);
                 var height = 300, barHeight = 20;           //fixed height. Might need to fix this.
                 var paddingX = 50, paddingY = 50;
 
@@ -219,7 +220,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
                         var monthNameFormat = d3.time.format("%b");
                         return monthNameFormat(new Date(2014, month - 1, 1));
                     });
-                ;
+
 
                 yAxis = d3.svg.axis()
                     .scale(yScale)
@@ -248,7 +249,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ct.ui.router.extras"])
 
 
                 scope.$watchGroup(['player', 'stat'], function(newValues){
-                    console.log("Drawing graph");
+
 
                     player = newValues[0];
                     stat = newValues[1];
