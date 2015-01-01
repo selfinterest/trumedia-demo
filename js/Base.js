@@ -124,3 +124,8 @@ Base.prototype.applyToEachStat = function(someFunction, someArguments, someStats
         return resultObject;
     }, this), {});
 }
+
+
+Base.prototype.groupStuff = function(){
+
+}

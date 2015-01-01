@@ -50,7 +50,7 @@
                                 <div class="row" ng-controller="TableController">
                                     <!-- table goes here --> 
                                     <div class="col-sm-12">
-                                        <div ui-grid="gridOptions"></div>
+                                        <div ui-grid="gridOptions" ui-grid-resize-columns></div>
 
                                     </div>
                                 </div>
@@ -89,7 +89,7 @@
     </script>
 
     <script type="text/ng-template" id="table.html">
-        <div ui-grid="gridOptions"></div>
+        <div ui-grid="gridOptions" ui-grid-resize-columns></div>
     </script>
 </head>
 <body>
