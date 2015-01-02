@@ -30,7 +30,7 @@ angular.module("TruMediaApp", ["ui.router", "ui.grid", "ui.grid.resizeColumns", 
 			players[data.id] = new Player(data);
 		});
 
-		//No hash prefix
+
 		$locationProvider.hashPrefix("!");
 
 		//When empty state, redirect to first player
