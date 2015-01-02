@@ -22,6 +22,8 @@ Notable Features
 
 Installation Instructions
 --------------------------
-Extract the zip file somewhere. Load index.html in your browser. No server required. Have fun!
+Extract the zip file somewhere. On Linux (and presumably Mac), you can simply load index.html into a browser using the file:/// protocol, no server required.
+
+On Windows, security restrictions will prevent the app from running properly using the file:/// protocol. Fortunately, PhpStorm and Intellij both ship with tiny web servers that can be used to load index.html in a Windows environment.
 
 &copy; 2015 TCW Consulting
